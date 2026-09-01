@@ -6,7 +6,9 @@
 (() => {
   'use strict';
 
+  // ==========================================================================
   // Sample Presets Database
+  // ==========================================================================
   const SAMPLE_PRESETS = {
     launch: "Hey team, we just finished building the new export feature for user dashboards. It lets users download reports as CSV or PDF in one click. We think this will help reduce customer support tickets about data sharing.",
     delay: "Unfortunately we are running into some unexpected technical blockers with the authentication service, so the Q3 release will be delayed by about two weeks. We are working hard to resolve this as fast as possible.",
@@ -14,6 +16,9 @@
     followup: "Just checking in to see if you had a chance to review the proposal I sent over last Tuesday. Let me know if you have any questions or want to set up a quick 15-minute call."
   };
 
+  // ==========================================================================
+  // Lexical & Semantic Dictionaries for Rule-Based Rewriting
+  // ==========================================================================
   const FILLER_PHRASES = [
     /\b(just wanted to|i just wanted to|i am just writing to|just checking in to see if)\b/gi,
     /\b(hope this email finds you well|hope you are doing well|i hope you're having a good week)\b/gi,
@@ -76,6 +81,13 @@
     { from: /\b(just checking in to see if you had a chance to review the proposal I sent over last Tuesday. Let me know if you have any questions or want to set up a quick 15-minute call)\b/gi, to: "Quick nudge! 👀 Sent over that proposal last Tuesday. Open for a 15-min brainstorm whenever your schedule opens up." }
   ];
 
+  // ==========================================================================
+  // Transformation Pipeline Engine
+  // ==========================================================================
+
+  /**
+   * Cleans raw text, strips extreme whitespace and filler.
+   */
   function sanitizeInput(text) {
     if (!text) return '';
     let cleaned = text.trim();
@@ -85,6 +97,9 @@
     return cleaned.replace(/\s{2,}/g, ' ').replace(/^[,\s.-]+/, '');
   }
 
+  /**
+   * Splits text into coherent sentences.
+   */
   function splitIntoSentences(text) {
     if (!text) return [];
     return text
@@ -93,6 +108,9 @@
       .filter(s => s.length > 0);
   }
 
+  /**
+   * Applies custom dictionary substitutions.
+   */
   function applyReplacements(text, dictionary) {
     let result = text;
     dictionary.forEach(({ from, to }) => {
@@ -101,16 +119,29 @@
     return result;
   }
 
+  /**
+   * Capitalizes first character of string.
+   */
   function capitalize(str) {
     if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
+  /**
+   * Strips trailing punctuation.
+   */
   function stripTrailingPunctuation(str) {
     return str.replace(/[.,;?!]+$/, '');
   }
 
+  // ==========================================================================
+  // Tone Variation Generators (12 Distinct Profiles)
+  // ==========================================================================
+
   const TRANSFORMERS = {
+    // ------------------------------------------------------------------------
+    // EXECUTIVE PITCH
+    // ------------------------------------------------------------------------
     executive: {
       subtitle: "Showing 3 distinct styles for Executive Pitch",
       v1: {
@@ -127,8 +158,12 @@
         note: "Bottom-line up front with action items",
         transform: (raw) => {
           const sentences = splitIntoSentences(raw);
+          const sanitized = sanitizeInput(raw);
+          const replaced = applyReplacements(sanitized, EXECUTIVE_REPLACEMENTS);
+          
           let mainPoint = sentences[0] ? applyReplacements(sentences[0], EXECUTIVE_REPLACEMENTS) : "Key initiative on track.";
           let secondary = sentences.length > 1 ? applyReplacements(sentences.slice(1).join(' '), EXECUTIVE_REPLACEMENTS) : "Execution plan underway.";
+
           return `• Executive Summary: ${capitalize(stripTrailingPunctuation(mainPoint))}.\n• Core Impact: ${capitalize(stripTrailingPunctuation(secondary))}.\n• Action Required: Governance review and milestone sign-off.`;
         }
       },
@@ -142,6 +177,10 @@
         }
       }
     },
+
+    // ------------------------------------------------------------------------
+    // RUTHLESSLY CONCISE
+    // ------------------------------------------------------------------------
     concise: {
       subtitle: "Showing 3 distinct styles for Ruthlessly Concise",
       v1: {
@@ -167,6 +206,7 @@
           let bluf = sentences[0] ? applyReplacements(sentences[0], CONCISE_REPLACEMENTS) : "Update logged.";
           let driver = sentences[1] ? applyReplacements(sentences[1], CONCISE_REPLACEMENTS) : "Details documented.";
           let next = sentences.length > 2 ? applyReplacements(sentences.slice(2).join(' '), CONCISE_REPLACEMENTS) : "Action: Review & proceed.";
+
           return `• BLUF: ${capitalize(stripTrailingPunctuation(bluf))}\n• Context: ${capitalize(stripTrailingPunctuation(driver))}\n• Next Step: ${capitalize(stripTrailingPunctuation(next))}`;
         }
       },
@@ -179,11 +219,16 @@
             .split(/\s+/)
             .filter(w => !['the', 'a', 'an', 'and', 'in', 'that', 'this', 'we', 'i', 'just', 'some', 'about', 'very', 'really', 'our', 'to', 'for'].includes(w.toLowerCase()))
             .slice(0, 12);
+          
           if (words.length === 0) words = raw.split(/\s+/).slice(0, 8);
           return words.join(' ').toUpperCase() + ' — ACKNOWLEDGE.';
         }
       }
     },
+
+    // ------------------------------------------------------------------------
+    // FRIENDLY UX
+    // ------------------------------------------------------------------------
     friendly: {
       subtitle: "Showing 3 distinct styles for Friendly UX",
       v1: {
@@ -214,6 +259,10 @@
         }
       }
     },
+
+    // ------------------------------------------------------------------------
+    // CASUAL SOCIAL
+    // ------------------------------------------------------------------------
     social: {
       subtitle: "Showing 3 distinct styles for Casual Social",
       v1: {
@@ -244,12 +293,18 @@
     }
   };
 
+  // ==========================================================================
+  // State Management
+  // ==========================================================================
   const state = {
     activeTone: 'executive',
     inputText: '',
     copyTimeouts: {}
   };
 
+  // ==========================================================================
+  // DOM Elements Selection
+  // ==========================================================================
   const elements = {
     sourceText: document.getElementById('source-text'),
     inputWords: document.getElementById('input-words'),
@@ -261,6 +316,7 @@
     activeToneSubtitle: document.getElementById('active-tone-subtitle'),
     sampleChips: document.querySelectorAll('.sample-chip'),
     
+    // Variation 1
     labelV1: document.getElementById('label-v1'),
     noteV1: document.getElementById('note-v1'),
     textV1: document.getElementById('text-v1'),
@@ -268,6 +324,7 @@
     charsV1: document.getElementById('chars-v1'),
     deltaV1: document.getElementById('delta-v1'),
 
+    // Variation 2
     labelV2: document.getElementById('label-v2'),
     noteV2: document.getElementById('note-v2'),
     textV2: document.getElementById('text-v2'),
@@ -275,6 +332,7 @@
     charsV2: document.getElementById('chars-v2'),
     deltaV2: document.getElementById('delta-v2'),
 
+    // Variation 3
     labelV3: document.getElementById('label-v3'),
     noteV3: document.getElementById('note-v3'),
     textV3: document.getElementById('text-v3'),
@@ -282,30 +340,45 @@
     charsV3: document.getElementById('chars-v3'),
     deltaV3: document.getElementById('delta-v3'),
 
+    // Global
     copyBtns: document.querySelectorAll('.btn-copy'),
     a11yAnnouncer: document.getElementById('a11y-announcer'),
     toastContainer: document.getElementById('toast-container')
   };
 
+  // ==========================================================================
+  // Text Measurement Utilities
+  // ==========================================================================
   function countWords(str) {
-    if (!str) return 0;
+    if (!str || typeof str !== 'string') return 0;
     const matches = str.trim().match(/[\w'-]+/g);
     return matches ? matches.length : 0;
   }
 
   function countChars(str) {
-    if (!str) return 0;
+    if (!str || typeof str !== 'string') return 0;
     return str.length;
   }
 
   function calculateDelta(originalCount, newCount) {
-    if (!originalCount) return '0%';
+    if (!originalCount || originalCount === 0) return '0%';
     const delta = Math.round(((newCount - originalCount) / originalCount) * 100);
-    return delta > 0 ? `+${delta}%` : `${delta}%`;
+    if (delta > 0) return `+${delta}%`;
+    return `${delta}%`;
+  }
+
+  // ==========================================================================
+  // Toast & A11y Announcements
+  // ==========================================================================
+  function announce(message) {
+    if (elements.a11yAnnouncer) {
+      elements.a11yAnnouncer.textContent = message;
+    }
   }
 
   function showToast(message, type = 'success') {
     if (!elements.toastContainer) return;
+    
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.innerHTML = `
@@ -314,23 +387,118 @@
       </svg>
       <span>${message}</span>
     `;
+
     elements.toastContainer.appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('show'));
+    
+    // Trigger transition
+    requestAnimationFrame(() => {
+      toast.classList.add('show');
+    });
+
     setTimeout(() => {
       toast.classList.remove('show');
-      setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
     }, 2200);
   }
 
+  // ==========================================================================
+  // Core Render Engine
+  // ==========================================================================
+  function render() {
+    const rawText = elements.sourceText.value || '';
+    state.inputText = rawText;
+
+    // Update Input Stats
+    const inWords = countWords(rawText);
+    const inChars = countChars(rawText);
+    elements.inputWords.textContent = inWords;
+    elements.inputChars.textContent = inChars;
+
+    const toneConfig = TRANSFORMERS[state.activeTone];
+    if (!toneConfig) return;
+
+    elements.activeToneSubtitle.textContent = toneConfig.subtitle;
+
+    // Card 1
+    elements.labelV1.textContent = toneConfig.v1.label;
+    elements.noteV1.innerHTML = toneConfig.v1.note;
+    
+    // Card 2
+    elements.labelV2.textContent = toneConfig.v2.label;
+    elements.noteV2.innerHTML = toneConfig.v2.note;
+
+    // Card 3
+    elements.labelV3.textContent = toneConfig.v3.label;
+    elements.noteV3.innerHTML = toneConfig.v3.note;
+
+    if (!rawText.trim()) {
+      const placeholderHtml = '<em class="placeholder">Type or paste copy above to see this variation...</em>';
+      elements.textV1.innerHTML = placeholderHtml;
+      elements.textV2.innerHTML = placeholderHtml;
+      elements.textV3.innerHTML = placeholderHtml;
+
+      elements.wordsV1.textContent = '0 words';
+      elements.charsV1.textContent = '0 chars';
+      elements.deltaV1.textContent = '0%';
+
+      elements.wordsV2.textContent = '0 words';
+      elements.charsV2.textContent = '0 chars';
+      elements.deltaV2.textContent = '0%';
+
+      elements.wordsV3.textContent = '0 words';
+      elements.charsV3.textContent = '0 chars';
+      elements.deltaV3.textContent = '0%';
+      return;
+    }
+
+    // Process Transformations
+    const out1 = toneConfig.v1.transform(rawText);
+    const out2 = toneConfig.v2.transform(rawText);
+    const out3 = toneConfig.v3.transform(rawText);
+
+    // Render Text (safely preserving line breaks)
+    elements.textV1.textContent = out1;
+    elements.textV2.textContent = out2;
+    elements.textV3.textContent = out3;
+
+    // Render Card 1 Stats
+    const w1 = countWords(out1);
+    const c1 = countChars(out1);
+    elements.wordsV1.textContent = `${w1} words`;
+    elements.charsV1.textContent = `${c1} chars`;
+    elements.deltaV1.textContent = calculateDelta(inWords, w1);
+
+    // Render Card 2 Stats
+    const w2 = countWords(out2);
+    const c2 = countChars(out2);
+    elements.wordsV2.textContent = `${w2} words`;
+    elements.charsV2.textContent = `${c2} chars`;
+    elements.deltaV2.textContent = calculateDelta(inWords, w2);
+
+    // Render Card 3 Stats
+    const w3 = countWords(out3);
+    const c3 = countChars(out3);
+    elements.wordsV3.textContent = `${w3} words`;
+    elements.charsV3.textContent = `${c3} chars`;
+    elements.deltaV3.textContent = calculateDelta(inWords, w3);
+  }
+
+  // ==========================================================================
+  // Clipboard Operations with Visual Feedback (2 seconds)
+  // ==========================================================================
   async function copyToClipboard(text, buttonElement) {
     if (!text || text.trim() === '') {
       showToast('Nothing to copy yet!', 'warning');
       return;
     }
+
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
       } else {
+        // Fallback for older or unsecure environments
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
@@ -342,6 +510,7 @@
         document.body.removeChild(textArea);
       }
 
+      // Visual feedback on button
       const targetId = buttonElement.getAttribute('data-target');
       if (state.copyTimeouts[targetId]) {
         clearTimeout(state.copyTimeouts[targetId]);
@@ -351,114 +520,74 @@
       const textSpan = buttonElement.querySelector('.copy-btn-text');
       if (textSpan) textSpan.textContent = 'Copied!';
 
+      announce('Text copied to clipboard successfully.');
       showToast('Copied to clipboard!');
 
+      // Revert after 2 seconds (2000ms)
       state.copyTimeouts[targetId] = setTimeout(() => {
         buttonElement.classList.remove('copied');
         if (textSpan) textSpan.textContent = 'Copy';
       }, 2000);
+
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy to clipboard:', err);
       showToast('Failed to copy text', 'error');
     }
   }
 
-  function render() {
-    const rawText = elements.sourceText.value || '';
-    state.inputText = rawText;
-
-    const inWords = countWords(rawText);
-    const inChars = countChars(rawText);
-    elements.inputWords.textContent = inWords;
-    elements.inputChars.textContent = inChars;
-
-    const toneConfig = TRANSFORMERS[state.activeTone];
-    if (!toneConfig) return;
-
-    elements.activeToneSubtitle.textContent = toneConfig.subtitle;
-
-    elements.labelV1.textContent = toneConfig.v1.label;
-    elements.noteV1.innerHTML = toneConfig.v1.note;
-    elements.labelV2.textContent = toneConfig.v2.label;
-    elements.noteV2.innerHTML = toneConfig.v2.note;
-    elements.labelV3.textContent = toneConfig.v3.label;
-    elements.noteV3.innerHTML = toneConfig.v3.note;
-
-    if (!rawText.trim()) {
-      elements.textV1.textContent = '';
-      elements.textV2.textContent = '';
-      elements.textV3.textContent = '';
-      elements.wordsV1.textContent = '0 words';
-      elements.charsV1.textContent = '0 chars';
-      elements.deltaV1.textContent = '0%';
-      elements.wordsV2.textContent = '0 words';
-      elements.charsV2.textContent = '0 chars';
-      elements.deltaV2.textContent = '0%';
-      elements.wordsV3.textContent = '0 words';
-      elements.charsV3.textContent = '0 chars';
-      elements.deltaV3.textContent = '0%';
-      return;
-    }
-
-    const out1 = toneConfig.v1.transform(rawText);
-    const out2 = toneConfig.v2.transform(rawText);
-    const out3 = toneConfig.v3.transform(rawText);
-
-    elements.textV1.textContent = out1;
-    elements.textV2.textContent = out2;
-    elements.textV3.textContent = out3;
-
-    const w1 = countWords(out1);
-    const c1 = countChars(out1);
-    elements.wordsV1.textContent = `${w1} words`;
-    elements.charsV1.textContent = `${c1} chars`;
-    elements.deltaV1.textContent = calculateDelta(inWords, w1);
-
-    const w2 = countWords(out2);
-    const c2 = countChars(out2);
-    elements.wordsV2.textContent = `${w2} words`;
-    elements.charsV2.textContent = `${c2} chars`;
-    elements.deltaV2.textContent = calculateDelta(inWords, w2);
-
-    const w3 = countWords(out3);
-    const c3 = countChars(out3);
-    elements.wordsV3.textContent = `${w3} words`;
-    elements.charsV3.textContent = `${c3} chars`;
-    elements.deltaV3.textContent = calculateDelta(inWords, w3);
-  }
-
+  // ==========================================================================
+  // Event Listeners & Binding
+  // ==========================================================================
   function setupEventListeners() {
+    // Debounced text input
     let debounceTimer;
     elements.sourceText.addEventListener('input', () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(render, 150);
     });
 
+    // Keyboard shortcut (Ctrl+Enter / Cmd+Enter)
     elements.sourceText.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         render();
+        showToast('Shifted tone!');
       }
     });
 
-    elements.transformBtn.addEventListener('click', render);
+    // Transform button click
+    elements.transformBtn.addEventListener('click', () => {
+      render();
+      showToast('Shifted tone!');
+      announce('Tone variations regenerated.');
+    });
 
+    // Clear button
     elements.clearBtn.addEventListener('click', () => {
       elements.sourceText.value = '';
       render();
       elements.sourceText.focus();
+      announce('Input text cleared.');
     });
 
+    // Paste button
     elements.pasteBtn.addEventListener('click', async () => {
       try {
         if (navigator.clipboard && navigator.clipboard.readText) {
           const text = await navigator.clipboard.readText();
           elements.sourceText.value = text;
           render();
+          showToast('Pasted from clipboard!');
+          announce('Text pasted from clipboard.');
+        } else {
+          showToast('Clipboard access not permitted in browser', 'warning');
         }
-      } catch (err) {}
+      } catch (err) {
+        showToast('Please press Ctrl+V to paste', 'warning');
+      }
     });
 
+    // Tone selector pills
     elements.tonePills.forEach(pill => {
       pill.addEventListener('click', () => {
         elements.tonePills.forEach(p => {
@@ -467,41 +596,56 @@
         });
         pill.classList.add('active');
         pill.setAttribute('aria-checked', 'true');
+        
         state.activeTone = pill.getAttribute('data-tone');
         render();
+        announce(`Selected tone: ${pill.querySelector('.pill-title').textContent}`);
       });
     });
 
+    // Sample Presets chips
     elements.sampleChips.forEach(chip => {
       chip.addEventListener('click', () => {
         const sampleKey = chip.getAttribute('data-sample');
         if (SAMPLE_PRESETS[sampleKey]) {
           elements.sourceText.value = SAMPLE_PRESETS[sampleKey];
           render();
+          showToast(`Loaded "${chip.textContent.trim()}" sample!`);
+          announce(`Loaded sample preset ${chip.textContent.trim()}`);
         }
       });
     });
 
+    // Copy buttons
     elements.copyBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         const targetId = btn.getAttribute('data-target');
         const targetElement = document.getElementById(targetId);
         if (targetElement) {
-          copyToClipboard(targetElement.textContent.trim(), btn);
+          const text = targetElement.textContent.trim();
+          copyToClipboard(text, btn);
         }
       });
     });
   }
 
+  // ==========================================================================
+  // Initialization
+  // ==========================================================================
   function init() {
     setupEventListeners();
+    
+    // Load default sample to immediately show capability
     elements.sourceText.value = SAMPLE_PRESETS.launch;
     render();
   }
 
+  // Run on DOM Ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
+
 })();
+

@@ -231,11 +231,13 @@
               <p class="output-subtitle" id="active-tone-subtitle">Showing 3 distinct styles for Executive Pitch</p>
             </div>
           </div>
+
           <div class="output-meta">
             <span class="badge badge-accent" id="variations-ready-badge">3 Variations Ready</span>
           </div>
         </div>
 
+        <!-- 3 Output Cards Grid -->
         <div class="cards-grid" id="output-cards-grid">
           <!-- Card 1 -->
           <article class="variation-card glass-panel" id="card-variation-1">
@@ -250,9 +252,13 @@
                 <span class="badge-mini badge-delta" id="delta-v1">0%</span>
               </div>
             </div>
+
             <div class="card-body">
-              <div class="transformed-text" id="text-v1" tabindex="0" role="textbox" aria-readonly="true"></div>
+              <div class="transformed-text" id="text-v1" tabindex="0" role="textbox" aria-readonly="true">
+                <!-- Injected via JavaScript -->
+              </div>
             </div>
+
             <div class="card-footer">
               <span class="style-note" id="note-v1">High-level outcome &amp; ROI focused</span>
               <button type="button" class="btn btn-copy" data-target="text-v1" aria-label="Copy Variation 1 to clipboard">
@@ -285,9 +291,13 @@
                 <span class="badge-mini badge-delta" id="delta-v2">0%</span>
               </div>
             </div>
+
             <div class="card-body">
-              <div class="transformed-text" id="text-v2" tabindex="0" role="textbox" aria-readonly="true"></div>
+              <div class="transformed-text" id="text-v2" tabindex="0" role="textbox" aria-readonly="true">
+                <!-- Injected via JavaScript -->
+              </div>
             </div>
+
             <div class="card-footer">
               <span class="style-note" id="note-v2">Direct, bottom-line alignment</span>
               <button type="button" class="btn btn-copy" data-target="text-v2" aria-label="Copy Variation 2 to clipboard">
@@ -320,9 +330,13 @@
                 <span class="badge-mini badge-delta" id="delta-v3">0%</span>
               </div>
             </div>
+
             <div class="card-body">
-              <div class="transformed-text" id="text-v3" tabindex="0" role="textbox" aria-readonly="true"></div>
+              <div class="transformed-text" id="text-v3" tabindex="0" role="textbox" aria-readonly="true">
+                <!-- Injected via JavaScript -->
+              </div>
             </div>
+
             <div class="card-footer">
               <span class="style-note" id="note-v3">Macro perspective &amp; momentum</span>
               <button type="button" class="btn btn-copy" data-target="text-v3" aria-label="Copy Variation 3 to clipboard">
@@ -354,9 +368,13 @@
     </footer>
   </div>
 
+  <!-- Live region for accessibility announcements -->
   <div id="a11y-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Toast notification container -->
   <div id="toast-container" class="toast-container" aria-hidden="true"></div>
 
   <script src="app.js"></script>
 </body>
 </html>
+
