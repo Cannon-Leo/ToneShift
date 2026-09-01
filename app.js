@@ -246,7 +246,8 @@
 
   const state = {
     activeTone: 'executive',
-    inputText: ''
+    inputText: '',
+    copyTimeouts: {}
   };
 
   const elements = {
@@ -279,7 +280,11 @@
     textV3: document.getElementById('text-v3'),
     wordsV3: document.getElementById('words-v3'),
     charsV3: document.getElementById('chars-v3'),
-    deltaV3: document.getElementById('delta-v3')
+    deltaV3: document.getElementById('delta-v3'),
+
+    copyBtns: document.querySelectorAll('.btn-copy'),
+    a11yAnnouncer: document.getElementById('a11y-announcer'),
+    toastContainer: document.getElementById('toast-container')
   };
 
   function countWords(str) {
@@ -297,6 +302,65 @@
     if (!originalCount) return '0%';
     const delta = Math.round(((newCount - originalCount) / originalCount) * 100);
     return delta > 0 ? `+${delta}%` : `${delta}%`;
+  }
+
+  function showToast(message, type = 'success') {
+    if (!elements.toastContainer) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>${message}</span>
+    `;
+    elements.toastContainer.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+    }, 2200);
+  }
+
+  async function copyToClipboard(text, buttonElement) {
+    if (!text || text.trim() === '') {
+      showToast('Nothing to copy yet!', 'warning');
+      return;
+    }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+
+      const targetId = buttonElement.getAttribute('data-target');
+      if (state.copyTimeouts[targetId]) {
+        clearTimeout(state.copyTimeouts[targetId]);
+      }
+
+      buttonElement.classList.add('copied');
+      const textSpan = buttonElement.querySelector('.copy-btn-text');
+      if (textSpan) textSpan.textContent = 'Copied!';
+
+      showToast('Copied to clipboard!');
+
+      state.copyTimeouts[targetId] = setTimeout(() => {
+        buttonElement.classList.remove('copied');
+        if (textSpan) textSpan.textContent = 'Copy';
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      showToast('Failed to copy text', 'error');
+    }
   }
 
   function render() {
@@ -385,6 +449,16 @@
       elements.sourceText.focus();
     });
 
+    elements.pasteBtn.addEventListener('click', async () => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          elements.sourceText.value = text;
+          render();
+        }
+      } catch (err) {}
+    });
+
     elements.tonePills.forEach(pill => {
       pill.addEventListener('click', () => {
         elements.tonePills.forEach(p => {
@@ -404,6 +478,16 @@
         if (SAMPLE_PRESETS[sampleKey]) {
           elements.sourceText.value = SAMPLE_PRESETS[sampleKey];
           render();
+        }
+      });
+    });
+
+    elements.copyBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+          copyToClipboard(targetElement.textContent.trim(), btn);
         }
       });
     });
