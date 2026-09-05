@@ -303,48 +303,56 @@
   };
 
   // ==========================================================================
-  // DOM Elements Selection
+  // SSR & DOM Environment Detection
   // ==========================================================================
-  const elements = {
-    sourceText: document.getElementById('source-text'),
-    inputWords: document.getElementById('input-words'),
-    inputChars: document.getElementById('input-chars'),
-    pasteBtn: document.getElementById('paste-btn'),
-    clearBtn: document.getElementById('clear-btn'),
-    transformBtn: document.getElementById('transform-btn'),
-    tonePills: document.querySelectorAll('.tone-pill'),
-    activeToneSubtitle: document.getElementById('active-tone-subtitle'),
-    sampleChips: document.querySelectorAll('.sample-chip'),
-    
-    // Variation 1
-    labelV1: document.getElementById('label-v1'),
-    noteV1: document.getElementById('note-v1'),
-    textV1: document.getElementById('text-v1'),
-    wordsV1: document.getElementById('words-v1'),
-    charsV1: document.getElementById('chars-v1'),
-    deltaV1: document.getElementById('delta-v1'),
+  const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
 
-    // Variation 2
-    labelV2: document.getElementById('label-v2'),
-    noteV2: document.getElementById('note-v2'),
-    textV2: document.getElementById('text-v2'),
-    wordsV2: document.getElementById('words-v2'),
-    charsV2: document.getElementById('chars-v2'),
-    deltaV2: document.getElementById('delta-v2'),
+  let elements = {};
 
-    // Variation 3
-    labelV3: document.getElementById('label-v3'),
-    noteV3: document.getElementById('note-v3'),
-    textV3: document.getElementById('text-v3'),
-    wordsV3: document.getElementById('words-v3'),
-    charsV3: document.getElementById('chars-v3'),
-    deltaV3: document.getElementById('delta-v3'),
+  function initElements() {
+    if (!isBrowser) return false;
+    elements = {
+      sourceText: document.getElementById('source-text'),
+      inputWords: document.getElementById('input-words'),
+      inputChars: document.getElementById('input-chars'),
+      pasteBtn: document.getElementById('paste-btn'),
+      clearBtn: document.getElementById('clear-btn'),
+      transformBtn: document.getElementById('transform-btn'),
+      tonePills: document.querySelectorAll('.tone-pill'),
+      activeToneSubtitle: document.getElementById('active-tone-subtitle'),
+      sampleChips: document.querySelectorAll('.sample-chip'),
+      
+      // Variation 1
+      labelV1: document.getElementById('label-v1'),
+      noteV1: document.getElementById('note-v1'),
+      textV1: document.getElementById('text-v1'),
+      wordsV1: document.getElementById('words-v1'),
+      charsV1: document.getElementById('chars-v1'),
+      deltaV1: document.getElementById('delta-v1'),
 
-    // Global
-    copyBtns: document.querySelectorAll('.btn-copy'),
-    a11yAnnouncer: document.getElementById('a11y-announcer'),
-    toastContainer: document.getElementById('toast-container')
-  };
+      // Variation 2
+      labelV2: document.getElementById('label-v2'),
+      noteV2: document.getElementById('note-v2'),
+      textV2: document.getElementById('text-v2'),
+      wordsV2: document.getElementById('words-v2'),
+      charsV2: document.getElementById('chars-v2'),
+      deltaV2: document.getElementById('delta-v2'),
+
+      // Variation 3
+      labelV3: document.getElementById('label-v3'),
+      noteV3: document.getElementById('note-v3'),
+      textV3: document.getElementById('text-v3'),
+      wordsV3: document.getElementById('words-v3'),
+      charsV3: document.getElementById('chars-v3'),
+      deltaV3: document.getElementById('delta-v3'),
+
+      // Global
+      copyBtns: document.querySelectorAll('.btn-copy'),
+      a11yAnnouncer: document.getElementById('a11y-announcer'),
+      toastContainer: document.getElementById('toast-container')
+    };
+    return Boolean(elements.sourceText);
+  }
 
   // ==========================================================================
   // Text Measurement Utilities
@@ -371,13 +379,12 @@
   // Toast & A11y Announcements
   // ==========================================================================
   function announce(message) {
-    if (elements.a11yAnnouncer) {
-      elements.a11yAnnouncer.textContent = message;
-    }
+    if (!isBrowser || !elements.a11yAnnouncer) return;
+    elements.a11yAnnouncer.textContent = message;
   }
 
   function showToast(message, type = 'success') {
-    if (!elements.toastContainer) return;
+    if (!isBrowser || !elements.toastContainer || typeof document === 'undefined') return;
     
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
@@ -390,8 +397,9 @@
 
     elements.toastContainer.appendChild(toast);
     
-    // Trigger transition
-    requestAnimationFrame(() => {
+    // Trigger transition safely
+    const triggerShow = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb) => setTimeout(cb, 16);
+    triggerShow(() => {
       toast.classList.add('show');
     });
 
@@ -407,6 +415,7 @@
   // Core Render Engine
   // ==========================================================================
   function render() {
+    if (!isBrowser || !elements.sourceText) return;
     const rawText = elements.sourceText.value || '';
     state.inputText = rawText;
 
@@ -495,9 +504,9 @@
     }
 
     try {
-      if (navigator.clipboard && window.isSecureContext) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && typeof window !== 'undefined' && window.isSecureContext) {
         await navigator.clipboard.writeText(text);
-      } else {
+      } else if (typeof document !== 'undefined') {
         // Fallback for older or unsecure environments
         const textArea = document.createElement('textarea');
         textArea.value = text;
@@ -509,6 +518,8 @@
         document.execCommand('copy');
         document.body.removeChild(textArea);
       }
+
+      if (!buttonElement) return;
 
       // Visual feedback on button
       const targetId = buttonElement.getAttribute('data-target');
@@ -539,6 +550,8 @@
   // Event Listeners & Binding
   // ==========================================================================
   function setupEventListeners() {
+    if (!isBrowser || !elements.sourceText) return;
+
     // Debounced text input
     let debounceTimer;
     elements.sourceText.addEventListener('input', () => {
@@ -556,95 +569,136 @@
     });
 
     // Transform button click
-    elements.transformBtn.addEventListener('click', () => {
-      render();
-      showToast('Shifted tone!');
-      announce('Tone variations regenerated.');
-    });
+    if (elements.transformBtn) {
+      elements.transformBtn.addEventListener('click', () => {
+        render();
+        showToast('Shifted tone!');
+        announce('Tone variations regenerated.');
+      });
+    }
 
     // Clear button
-    elements.clearBtn.addEventListener('click', () => {
-      elements.sourceText.value = '';
-      render();
-      elements.sourceText.focus();
-      announce('Input text cleared.');
-    });
+    if (elements.clearBtn) {
+      elements.clearBtn.addEventListener('click', () => {
+        elements.sourceText.value = '';
+        render();
+        elements.sourceText.focus();
+        announce('Input text cleared.');
+      });
+    }
 
     // Paste button
-    elements.pasteBtn.addEventListener('click', async () => {
-      try {
-        if (navigator.clipboard && navigator.clipboard.readText) {
-          const text = await navigator.clipboard.readText();
-          elements.sourceText.value = text;
-          render();
-          showToast('Pasted from clipboard!');
-          announce('Text pasted from clipboard.');
-        } else {
-          showToast('Clipboard access not permitted in browser', 'warning');
+    if (elements.pasteBtn) {
+      elements.pasteBtn.addEventListener('click', async () => {
+        try {
+          if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.readText) {
+            const text = await navigator.clipboard.readText();
+            elements.sourceText.value = text;
+            render();
+            showToast('Pasted from clipboard!');
+            announce('Text pasted from clipboard.');
+          } else {
+            showToast('Clipboard access not permitted in browser', 'warning');
+          }
+        } catch (err) {
+          showToast('Please press Ctrl+V to paste', 'warning');
         }
-      } catch (err) {
-        showToast('Please press Ctrl+V to paste', 'warning');
-      }
-    });
+      });
+    }
 
     // Tone selector pills
-    elements.tonePills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        elements.tonePills.forEach(p => {
-          p.classList.remove('active');
-          p.setAttribute('aria-checked', 'false');
+    if (elements.tonePills) {
+      elements.tonePills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          elements.tonePills.forEach(p => {
+            p.classList.remove('active');
+            p.setAttribute('aria-checked', 'false');
+          });
+          pill.classList.add('active');
+          pill.setAttribute('aria-checked', 'true');
+          
+          state.activeTone = pill.getAttribute('data-tone');
+          render();
+          const titleEl = pill.querySelector('.pill-title');
+          announce(`Selected tone: ${titleEl ? titleEl.textContent : state.activeTone}`);
         });
-        pill.classList.add('active');
-        pill.setAttribute('aria-checked', 'true');
-        
-        state.activeTone = pill.getAttribute('data-tone');
-        render();
-        announce(`Selected tone: ${pill.querySelector('.pill-title').textContent}`);
       });
-    });
+    }
 
     // Sample Presets chips
-    elements.sampleChips.forEach(chip => {
-      chip.addEventListener('click', () => {
-        const sampleKey = chip.getAttribute('data-sample');
-        if (SAMPLE_PRESETS[sampleKey]) {
-          elements.sourceText.value = SAMPLE_PRESETS[sampleKey];
-          render();
-          showToast(`Loaded "${chip.textContent.trim()}" sample!`);
-          announce(`Loaded sample preset ${chip.textContent.trim()}`);
-        }
+    if (elements.sampleChips) {
+      elements.sampleChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          const sampleKey = chip.getAttribute('data-sample');
+          if (SAMPLE_PRESETS[sampleKey]) {
+            elements.sourceText.value = SAMPLE_PRESETS[sampleKey];
+            render();
+            showToast(`Loaded "${chip.textContent.trim()}" sample!`);
+            announce(`Loaded sample preset ${chip.textContent.trim()}`);
+          }
+        });
       });
-    });
+    }
 
     // Copy buttons
-    elements.copyBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetId = btn.getAttribute('data-target');
-        const targetElement = document.getElementById(targetId);
-        if (targetElement) {
-          const text = targetElement.textContent.trim();
-          copyToClipboard(text, btn);
-        }
+    if (elements.copyBtns) {
+      elements.copyBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-target');
+          const targetElement = typeof document !== 'undefined' ? document.getElementById(targetId) : null;
+          if (targetElement) {
+            const text = targetElement.textContent.trim();
+            copyToClipboard(text, btn);
+          }
+        });
       });
-    });
+    }
   }
 
   // ==========================================================================
   // Initialization
   // ==========================================================================
   function init() {
+    if (!isBrowser) return;
+    if (!initElements()) return;
     setupEventListeners();
     
     // Load default sample to immediately show capability
-    elements.sourceText.value = SAMPLE_PRESETS.launch;
-    render();
+    if (elements.sourceText) {
+      elements.sourceText.value = SAMPLE_PRESETS.launch;
+      render();
+    }
   }
 
-  // Run on DOM Ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+  // Run on DOM Ready if in browser environment
+  if (isBrowser) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  }
+
+  // ==========================================================================
+  // Universal Module / SSR / Testing Export
+  // ==========================================================================
+  const ToneShiftAPI = {
+    SAMPLE_PRESETS,
+    TRANSFORMERS,
+    countWords,
+    countChars,
+    calculateDelta,
+    render,
+    init,
+    state
+  };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ToneShiftAPI;
+  }
+
+  if (typeof window !== 'undefined') {
+    window.ToneShift = ToneShiftAPI;
   }
 
 })();

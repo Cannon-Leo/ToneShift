@@ -1,0 +1,19 @@
+{
+  "name": "toneshift",
+  "version": "1.0.0",
+  "description": "ToneShift — Instant Local Copy Tone Transformer",
+  "main": "app.js",
+  "scripts": {
+    "build": "node -e \"const app = require('./app.js'); console.log('✓ ToneShift SSR/Build verification passed: No DOM or document reference errors.');\"",
+    "start": "node server.js",
+    "test": "node -e \"const app = require('./app.js'); if (!app.TRANSFORMERS) throw new Error('Failed to load transformers'); console.log('✓ All tests passed');\""
+  },
+  "keywords": [
+    "copywriting",
+    "tone-shift",
+    "nlp",
+    "client-side"
+  ],
+  "author": "Leo Cannon",
+  "license": "MIT"
+}

@@ -102,5 +102,24 @@ Potential future enhancements:
 
 ---
 
+## 📅 Entry 06: SSR & Vercel Deployment Hardening (`document is not defined`)
+
+### Challenge
+When deploying to Vercel or running in a Node.js / Server-Side Rendering (SSR) context, evaluating `app.js` threw `ReferenceError: document is not defined`. This was caused by eager querying of DOM elements at top-level module scope (`document.getElementById(...)`) and un-guarded calls to `document.readyState`, `window`, and `navigator`.
+
+### Solution Architecture
+1. **Environment Gate**:
+   - Introduced `const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';`
+2. **Lazy Element Initialization**:
+   - Replaced top-level static `elements` object with a deferred `initElements()` function executed only after `DOMContentLoaded` within a verified browser runtime.
+3. **Isomorphic Module Compatibility**:
+   - Exported `ToneShiftAPI` (`SAMPLE_PRESETS`, `TRANSFORMERS`, `countWords`, etc.) through `module.exports` when in Node/CommonJS and `window.ToneShift` when in browser.
+4. **Vercel & Build Configuration**:
+   - Added `package.json` with `npm run build` and `npm test` scripts validating SSR compatibility.
+   - Added `vercel.json` with `cleanUrls: true` for zero-configuration static hosting.
+
+---
+
 *ToneShift — Project Engineering Log*
+
 
