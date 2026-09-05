@@ -293,6 +293,9 @@
     }
   };
 
+  // Alias for compatibility between 'casual' and 'social' tone keys
+  TRANSFORMERS.casual = TRANSFORMERS.social;
+
   // ==========================================================================
   // State Management
   // ==========================================================================
@@ -415,50 +418,56 @@
   // Core Render Engine
   // ==========================================================================
   function render() {
-    if (!isBrowser || !elements.sourceText) return;
+    if (!isBrowser) return;
+    if (!elements.sourceText) {
+      initElements();
+      if (!elements.sourceText) return;
+    }
+
     const rawText = elements.sourceText.value || '';
     state.inputText = rawText;
 
     // Update Input Stats
     const inWords = countWords(rawText);
     const inChars = countChars(rawText);
-    elements.inputWords.textContent = inWords;
-    elements.inputChars.textContent = inChars;
+    if (elements.inputWords) elements.inputWords.textContent = inWords;
+    if (elements.inputChars) elements.inputChars.textContent = inChars;
 
-    const toneConfig = TRANSFORMERS[state.activeTone];
+    const toneKey = state.activeTone || 'executive';
+    const toneConfig = TRANSFORMERS[toneKey] || TRANSFORMERS.executive;
     if (!toneConfig) return;
 
-    elements.activeToneSubtitle.textContent = toneConfig.subtitle;
+    if (elements.activeToneSubtitle) elements.activeToneSubtitle.textContent = toneConfig.subtitle;
 
     // Card 1
-    elements.labelV1.textContent = toneConfig.v1.label;
-    elements.noteV1.innerHTML = toneConfig.v1.note;
+    if (elements.labelV1) elements.labelV1.textContent = toneConfig.v1.label;
+    if (elements.noteV1) elements.noteV1.innerHTML = toneConfig.v1.note;
     
     // Card 2
-    elements.labelV2.textContent = toneConfig.v2.label;
-    elements.noteV2.innerHTML = toneConfig.v2.note;
+    if (elements.labelV2) elements.labelV2.textContent = toneConfig.v2.label;
+    if (elements.noteV2) elements.noteV2.innerHTML = toneConfig.v2.note;
 
     // Card 3
-    elements.labelV3.textContent = toneConfig.v3.label;
-    elements.noteV3.innerHTML = toneConfig.v3.note;
+    if (elements.labelV3) elements.labelV3.textContent = toneConfig.v3.label;
+    if (elements.noteV3) elements.noteV3.innerHTML = toneConfig.v3.note;
 
     if (!rawText.trim()) {
       const placeholderHtml = '<em class="placeholder">Type or paste copy above to see this variation...</em>';
-      elements.textV1.innerHTML = placeholderHtml;
-      elements.textV2.innerHTML = placeholderHtml;
-      elements.textV3.innerHTML = placeholderHtml;
+      if (elements.textV1) elements.textV1.innerHTML = placeholderHtml;
+      if (elements.textV2) elements.textV2.innerHTML = placeholderHtml;
+      if (elements.textV3) elements.textV3.innerHTML = placeholderHtml;
 
-      elements.wordsV1.textContent = '0 words';
-      elements.charsV1.textContent = '0 chars';
-      elements.deltaV1.textContent = '0%';
+      if (elements.wordsV1) elements.wordsV1.textContent = '0 words';
+      if (elements.charsV1) elements.charsV1.textContent = '0 chars';
+      if (elements.deltaV1) elements.deltaV1.textContent = '0%';
 
-      elements.wordsV2.textContent = '0 words';
-      elements.charsV2.textContent = '0 chars';
-      elements.deltaV2.textContent = '0%';
+      if (elements.wordsV2) elements.wordsV2.textContent = '0 words';
+      if (elements.charsV2) elements.charsV2.textContent = '0 chars';
+      if (elements.deltaV2) elements.deltaV2.textContent = '0%';
 
-      elements.wordsV3.textContent = '0 words';
-      elements.charsV3.textContent = '0 chars';
-      elements.deltaV3.textContent = '0%';
+      if (elements.wordsV3) elements.wordsV3.textContent = '0 words';
+      if (elements.charsV3) elements.charsV3.textContent = '0 chars';
+      if (elements.deltaV3) elements.deltaV3.textContent = '0%';
       return;
     }
 
@@ -468,30 +477,30 @@
     const out3 = toneConfig.v3.transform(rawText);
 
     // Render Text (safely preserving line breaks)
-    elements.textV1.textContent = out1;
-    elements.textV2.textContent = out2;
-    elements.textV3.textContent = out3;
+    if (elements.textV1) elements.textV1.textContent = out1;
+    if (elements.textV2) elements.textV2.textContent = out2;
+    if (elements.textV3) elements.textV3.textContent = out3;
 
     // Render Card 1 Stats
     const w1 = countWords(out1);
     const c1 = countChars(out1);
-    elements.wordsV1.textContent = `${w1} words`;
-    elements.charsV1.textContent = `${c1} chars`;
-    elements.deltaV1.textContent = calculateDelta(inWords, w1);
+    if (elements.wordsV1) elements.wordsV1.textContent = `${w1} words`;
+    if (elements.charsV1) elements.charsV1.textContent = `${c1} chars`;
+    if (elements.deltaV1) elements.deltaV1.textContent = calculateDelta(inWords, w1);
 
     // Render Card 2 Stats
     const w2 = countWords(out2);
     const c2 = countChars(out2);
-    elements.wordsV2.textContent = `${w2} words`;
-    elements.charsV2.textContent = `${c2} chars`;
-    elements.deltaV2.textContent = calculateDelta(inWords, w2);
+    if (elements.wordsV2) elements.wordsV2.textContent = `${w2} words`;
+    if (elements.charsV2) elements.charsV2.textContent = `${c2} chars`;
+    if (elements.deltaV2) elements.deltaV2.textContent = calculateDelta(inWords, w2);
 
     // Render Card 3 Stats
     const w3 = countWords(out3);
     const c3 = countChars(out3);
-    elements.wordsV3.textContent = `${w3} words`;
-    elements.charsV3.textContent = `${c3} chars`;
-    elements.deltaV3.textContent = calculateDelta(inWords, w3);
+    if (elements.wordsV3) elements.wordsV3.textContent = `${w3} words`;
+    if (elements.charsV3) elements.charsV3.textContent = `${c3} chars`;
+    if (elements.deltaV3) elements.deltaV3.textContent = calculateDelta(inWords, w3);
   }
 
   // ==========================================================================
@@ -660,14 +669,25 @@
   // ==========================================================================
   function init() {
     if (!isBrowser) return;
-    if (!initElements()) return;
+    if (!initElements()) {
+      setTimeout(() => {
+        if (initElements()) {
+          setupEventListeners();
+          if (elements.sourceText && !elements.sourceText.value) {
+            elements.sourceText.value = SAMPLE_PRESETS.launch;
+          }
+          render();
+        }
+      }, 50);
+      return;
+    }
     setupEventListeners();
     
     // Load default sample to immediately show capability
-    if (elements.sourceText) {
+    if (elements.sourceText && !elements.sourceText.value) {
       elements.sourceText.value = SAMPLE_PRESETS.launch;
-      render();
     }
+    render();
   }
 
   // Run on DOM Ready if in browser environment
@@ -677,6 +697,9 @@
     } else {
       init();
     }
+    window.addEventListener('load', () => {
+      if (!elements.sourceText) init();
+    });
   }
 
   // ==========================================================================
@@ -693,18 +716,18 @@
     state
   };
 
+  // Base64 encoded 16x16 standard ICO binary (guarantees zero-failure 200 OK for /favicon.ico)
+  const FAVICON_B64 = "AAABAAEAEBAAAAEAIABABAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAADxZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/8WZj//FmY//xZmP/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+
   // ==========================================================================
   // Vercel Serverless Function & Node.js HTTP Handler
-  // Protects against unhandled exceptions and target /favicon.ico errors
   // ==========================================================================
   function handler(req, res) {
     try {
-      // If invoked without HTTP objects (e.g. testing or module import), return API
       if (!req || !res) {
         return ToneShiftAPI;
       }
 
-      // Safe URL normalization
       let reqUrl = '/';
       try {
         reqUrl = (req.url || '/').split('?')[0];
@@ -712,7 +735,6 @@
         reqUrl = '/';
       }
 
-      // Safe sender helper (supports Node http.ServerResponse and Vercel/Express res)
       const send = (code, headers, body) => {
         try {
           if (res.headersSent || res.writableEnded) return;
@@ -733,25 +755,13 @@
         } catch (_) {}
       };
 
-      // 1. Explicit Favicon handler - prevents 500 crashes on target /favicon.ico
-      if (reqUrl === '/favicon.ico') {
-        try {
-          const fs = require('fs');
-          const path = require('path');
-          const icoPath = path.join(__dirname, 'favicon.ico');
-          if (fs.existsSync(icoPath)) {
-            const buf = fs.readFileSync(icoPath);
-            return send(200, {
-              'Content-Type': 'image/x-icon',
-              'Cache-Control': 'public, max-age=86400'
-            }, buf);
-          }
-        } catch (_) {}
-        // Fallback: 204 No Content safely returned with zero unhandled exception
-        return send(204, {
+      // 1. Favicon: direct in-memory binary return (100% reliable 200 OK)
+      if (reqUrl === '/favicon.ico' || reqUrl === 'favicon.ico') {
+        const icoBuf = Buffer.from(FAVICON_B64, 'base64');
+        return send(200, {
           'Content-Type': 'image/x-icon',
           'Cache-Control': 'public, max-age=86400'
-        }, '');
+        }, icoBuf);
       }
 
       // 2. Health check endpoint
@@ -764,9 +774,7 @@
         let body = '';
         req.on('data', chunk => {
           body += chunk;
-          if (body.length > 1e6) {
-            req.destroy();
-          }
+          if (body.length > 1e6) req.destroy();
         });
         req.on('end', () => {
           try {
@@ -787,55 +795,55 @@
         return;
       }
 
-      // 4. Static file resolution fallback
+      // 4. In-memory self-serving for app.js (never return HTML for a JS request)
+      if (reqUrl === '/app.js') {
+        let code = '';
+        try {
+          const fs = require('fs');
+          code = fs.readFileSync(__filename, 'utf8');
+        } catch (_) {}
+        return send(200, {
+          'Content-Type': 'application/javascript; charset=UTF-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate'
+        }, code);
+      }
+
+      // 5. Stylesheet resolution
+      if (reqUrl === '/style.css') {
+        let css = '';
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const cssPath = path.join(__dirname, 'style.css');
+          if (fs.existsSync(cssPath)) css = fs.readFileSync(cssPath, 'utf8');
+        } catch (_) {}
+        return send(200, {
+          'Content-Type': 'text/css; charset=UTF-8',
+          'Cache-Control': 'public, max-age=0, must-revalidate'
+        }, css);
+      }
+
+      // 6. Root and HTML resolution
       try {
         const fs = require('fs');
         const path = require('path');
-        let filePath = '';
-        let contentType = 'text/html; charset=UTF-8';
-
-        if (reqUrl === '/' || reqUrl === '/index.html') {
-          filePath = path.join(__dirname, 'index.html');
-          contentType = 'text/html; charset=UTF-8';
-        } else if (reqUrl === '/style.css') {
-          filePath = path.join(__dirname, 'style.css');
-          contentType = 'text/css; charset=UTF-8';
-        } else if (reqUrl === '/app.js') {
-          filePath = path.join(__dirname, 'app.js');
-          contentType = 'application/javascript; charset=UTF-8';
-        }
-
-        if (filePath && fs.existsSync(filePath)) {
-          const fileData = fs.readFileSync(filePath);
+        const indexPath = path.join(__dirname, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          const fileData = fs.readFileSync(indexPath, 'utf8');
           return send(200, {
-            'Content-Type': contentType,
+            'Content-Type': 'text/html; charset=UTF-8',
             'Cache-Control': 'public, max-age=0, must-revalidate'
           }, fileData);
         }
       } catch (_) {}
 
-      // 5. Default safe HTML response
-      return send(200, { 'Content-Type': 'text/html; charset=UTF-8' }, `
-        <!DOCTYPE html>
-        <html>
-        <head><meta http-equiv="refresh" content="0; url=/"><title>ToneShift</title></head>
-        <body><script>window.location.href="/";</script></body>
-        </html>
-      `);
+      return send(200, { 'Content-Type': 'text/html; charset=UTF-8' }, `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/"><title>ToneShift</title></head><body><script>window.location.href="/";</script></body></html>`);
 
     } catch (unhandledException) {
-      // Catch all unhandled exceptions within function code so invocation never fails
       try {
         if (res && !res.headersSent && !res.writableEnded) {
-          if (typeof res.writeHead === 'function') {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-          }
-          if (typeof res.end === 'function') {
-            res.end(JSON.stringify({
-              error: 'Internal Server Error',
-              message: unhandledException ? unhandledException.message : 'Unknown error'
-            }));
-          }
+          if (typeof res.writeHead === 'function') res.writeHead(500, { 'Content-Type': 'application/json' });
+          if (typeof res.end === 'function') res.end(JSON.stringify({ error: 'Internal Server Error' }));
         }
       } catch (_) {}
     }

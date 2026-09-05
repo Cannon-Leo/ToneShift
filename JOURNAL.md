@@ -140,7 +140,27 @@ On Vercel, requests to `/favicon.ico` or root routes triggered a Serverless Func
 
 ---
 
+## 📅 Entry 08: Core Function Restoration & Pure Static Asset Deployment
+
+### Challenge
+After Vercel deployment, the core transformation functionality became unresponsive because legacy route rewrites in `vercel.json` and `"main": "app.js"` in `package.json` led Vercel to intercept asset requests like `/app.js` with serverless function fallbacks. In addition, the `casual` tone key needed aliasing to `social` to ensure full preset compatibility across UI attributes and transformation models.
+
+### Solution Architecture
+1. **Restored Pure Static Deployment**:
+   - Removed `"main": "app.js"` from `package.json` to prevent Vercel from treating the client app as a backend Lambda.
+   - Simplified `vercel.json` to `{ "cleanUrls": true }` to let Vercel's global CDN serve `index.html`, `style.css`, `app.js`, and `favicon.ico` directly at 200 OK.
+2. **Fixed `/favicon.ico` Paths**:
+   - Added both relative (`favicon.ico`) and absolute (`/favicon.ico`) icon links, along with shortcut icon links in `index.html`.
+   - Embedded standard ICO binary in Base64 within `app.js` handler as an in-memory safety net.
+3. **Hardened Core Functions (`app.js`)**:
+   - Added `TRANSFORMERS.casual = TRANSFORMERS.social;` alias so all preset keys work interchangeably.
+   - Enhanced `render()` with self-healing DOM element initialization and null-safe DOM manipulation.
+   - Hardened `init()` lifecycle with fallback retry mechanisms and `window.load` backup listeners.
+
+---
+
 *ToneShift — Project Engineering Log*
+
 
 
 
