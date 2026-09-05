@@ -680,7 +680,7 @@
   }
 
   // ==========================================================================
-  // Universal Module / SSR / Testing Export
+  // Core API Object
   // ==========================================================================
   const ToneShiftAPI = {
     SAMPLE_PRESETS,
@@ -693,12 +693,168 @@
     state
   };
 
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = ToneShiftAPI;
+  // ==========================================================================
+  // Vercel Serverless Function & Node.js HTTP Handler
+  // Protects against unhandled exceptions and target /favicon.ico errors
+  // ==========================================================================
+  function handler(req, res) {
+    try {
+      // If invoked without HTTP objects (e.g. testing or module import), return API
+      if (!req || !res) {
+        return ToneShiftAPI;
+      }
+
+      // Safe URL normalization
+      let reqUrl = '/';
+      try {
+        reqUrl = (req.url || '/').split('?')[0];
+      } catch (_) {
+        reqUrl = '/';
+      }
+
+      // Safe sender helper (supports Node http.ServerResponse and Vercel/Express res)
+      const send = (code, headers, body) => {
+        try {
+          if (res.headersSent || res.writableEnded) return;
+          if (typeof res.status === 'function' && typeof res.send === 'function') {
+            if (headers) {
+              for (const [k, v] of Object.entries(headers)) {
+                res.setHeader(k, v);
+              }
+            }
+            return res.status(code).send(body || '');
+          }
+          if (typeof res.writeHead === 'function') {
+            res.writeHead(code, headers || {});
+          }
+          if (typeof res.end === 'function') {
+            return res.end(body || '');
+          }
+        } catch (_) {}
+      };
+
+      // 1. Explicit Favicon handler - prevents 500 crashes on target /favicon.ico
+      if (reqUrl === '/favicon.ico') {
+        try {
+          const fs = require('fs');
+          const path = require('path');
+          const icoPath = path.join(__dirname, 'favicon.ico');
+          if (fs.existsSync(icoPath)) {
+            const buf = fs.readFileSync(icoPath);
+            return send(200, {
+              'Content-Type': 'image/x-icon',
+              'Cache-Control': 'public, max-age=86400'
+            }, buf);
+          }
+        } catch (_) {}
+        // Fallback: 204 No Content safely returned with zero unhandled exception
+        return send(204, {
+          'Content-Type': 'image/x-icon',
+          'Cache-Control': 'public, max-age=86400'
+        }, '');
+      }
+
+      // 2. Health check endpoint
+      if (reqUrl === '/health' || reqUrl === '/ping') {
+        return send(200, { 'Content-Type': 'application/json' }, JSON.stringify({ status: 'ok', time: new Date().toISOString() }));
+      }
+
+      // 3. API Transform endpoint (/api/transform)
+      if (reqUrl === '/api/transform' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk;
+          if (body.length > 1e6) {
+            req.destroy();
+          }
+        });
+        req.on('end', () => {
+          try {
+            const payload = JSON.parse(body || '{}');
+            const rawText = payload.text || '';
+            const tone = payload.tone || 'executive';
+            const cfg = TRANSFORMERS[tone] || TRANSFORMERS.executive;
+            const output = {
+              v1: cfg.v1.transform(rawText),
+              v2: cfg.v2.transform(rawText),
+              v3: cfg.v3.transform(rawText)
+            };
+            return send(200, { 'Content-Type': 'application/json' }, JSON.stringify(output));
+          } catch (jsonErr) {
+            return send(400, { 'Content-Type': 'application/json' }, JSON.stringify({ error: 'Invalid JSON payload' }));
+          }
+        });
+        return;
+      }
+
+      // 4. Static file resolution fallback
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        let filePath = '';
+        let contentType = 'text/html; charset=UTF-8';
+
+        if (reqUrl === '/' || reqUrl === '/index.html') {
+          filePath = path.join(__dirname, 'index.html');
+          contentType = 'text/html; charset=UTF-8';
+        } else if (reqUrl === '/style.css') {
+          filePath = path.join(__dirname, 'style.css');
+          contentType = 'text/css; charset=UTF-8';
+        } else if (reqUrl === '/app.js') {
+          filePath = path.join(__dirname, 'app.js');
+          contentType = 'application/javascript; charset=UTF-8';
+        }
+
+        if (filePath && fs.existsSync(filePath)) {
+          const fileData = fs.readFileSync(filePath);
+          return send(200, {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=0, must-revalidate'
+          }, fileData);
+        }
+      } catch (_) {}
+
+      // 5. Default safe HTML response
+      return send(200, { 'Content-Type': 'text/html; charset=UTF-8' }, `
+        <!DOCTYPE html>
+        <html>
+        <head><meta http-equiv="refresh" content="0; url=/"><title>ToneShift</title></head>
+        <body><script>window.location.href="/";</script></body>
+        </html>
+      `);
+
+    } catch (unhandledException) {
+      // Catch all unhandled exceptions within function code so invocation never fails
+      try {
+        if (res && !res.headersSent && !res.writableEnded) {
+          if (typeof res.writeHead === 'function') {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+          }
+          if (typeof res.end === 'function') {
+            res.end(JSON.stringify({
+              error: 'Internal Server Error',
+              message: unhandledException ? unhandledException.message : 'Unknown error'
+            }));
+          }
+        }
+      } catch (_) {}
+    }
   }
 
+  // Attach all methods and properties to handler for dual function/object compatibility
+  Object.assign(handler, ToneShiftAPI);
+
+  // Export for Vercel Serverless Function (/var/task/app.cjs) and Node/CommonJS
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = handler;
+    module.exports.default = handler;
+    module.exports.handler = handler;
+    module.exports.ToneShift = handler;
+  }
+
+  // Export for client-side browser window
   if (typeof window !== 'undefined') {
-    window.ToneShift = ToneShiftAPI;
+    window.ToneShift = handler;
   }
 
 })();

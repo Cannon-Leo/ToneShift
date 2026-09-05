@@ -120,6 +120,24 @@ When deploying to Vercel or running in a Node.js / Server-Side Rendering (SSR) c
 
 ---
 
+## 📅 Entry 07: Vercel Serverless Function Invocation & `/favicon.ico` Crash Resolution
+
+### Challenge
+On Vercel, requests to `/favicon.ico` or root routes triggered a Serverless Function error in `/var/task/app.cjs` because Vercel was invoking `app.js` as an AWS Lambda handler (`handler(req, res)`). Because `module.exports` had been exported as a plain object rather than an invokable function, unhandled exceptions occurred on every incoming request.
+
+### Solution Architecture
+1. **Serverless Function Handler (`app.js`)**:
+   - Implemented an invokable `handler(req, res)` that doubles as a callable function and an object holding all transformation methods via `Object.assign(handler, ToneShiftAPI)`.
+   - Wrapped the entire function body in a `try...catch` block to eliminate unhandled exceptions.
+2. **Target `/favicon.ico` Explicit Handling**:
+   - Added dedicated `/favicon.ico` routing inside the function code returning 200 with the ICO buffer or 204 No Content.
+   - Generated a physical `favicon.ico` file in the project root and added `<link rel="icon">` tags to `index.html`.
+3. **Explicit Vercel Routing Configuration (`vercel.json`)**:
+   - Defined static routes for `/favicon.ico`, `/style.css`, `/app.js`, and `/(.*)` falling back to `/index.html`.
+
+---
+
 *ToneShift — Project Engineering Log*
+
 
 
