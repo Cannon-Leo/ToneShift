@@ -3,30 +3,26 @@
    ========================================================================== */
 
 :root {
-  --bg-main: #090d16;
-  --bg-surface: rgba(18, 24, 38, 0.65);
-  --bg-surface-hover: rgba(28, 38, 58, 0.75);
-  --bg-card: rgba(15, 22, 36, 0.7);
+  --bg-main: #09090b;
+  --bg-surface: #121215;
+  --bg-surface-hover: #18181c;
+  --bg-card: #111114;
   --bg-card-border: rgba(255, 255, 255, 0.08);
   
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #f4f4f6;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
   
-  --accent-primary: #6366f1;
-  --accent-cyan: #06b6d4;
-  --accent-purple: #a855f7;
+  --accent-primary: #e4e4e7;
   --accent-emerald: #10b981;
-  
-  --grad-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #06b6d4 100%);
 
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 20px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -50,6 +46,8 @@ html {
 body {
   min-height: 100vh;
   background-color: var(--bg-main);
+  background-image: radial-gradient(ellipse 900px 700px at 100% 0%, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 45%, transparent 75%);
+  background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -58,36 +56,7 @@ body {
 }
 
 .ambient-glow {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.45;
-}
-
-.glow-1 {
-  width: 500px;
-  height: 500px;
-  top: -150px;
-  left: 10%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, rgba(0, 0, 0, 0) 70%);
-}
-
-.glow-2 {
-  width: 600px;
-  height: 600px;
-  top: 30%;
-  right: -150px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
-}
-
-.glow-3 {
-  width: 450px;
-  height: 450px;
-  bottom: -100px;
-  left: 20%;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
+  display: none;
 }
 
 .app-container {
@@ -119,22 +88,23 @@ body {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: var(--grad-brand);
+  background: #18181c;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .brand-text h1 {
   font-size: 1.75rem;
   font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .gradient-text {
-  background: var(--grad-brand);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
 .tagline {
@@ -171,9 +141,9 @@ body {
 }
 
 .badge-accent {
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: #18181d;
+  color: var(--text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .status-dot {
@@ -185,8 +155,6 @@ body {
 
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   border: 1px solid var(--bg-card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
@@ -196,21 +164,18 @@ body {
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
-  background: rgba(99, 102, 241, 0.15);
-  color: #818cf8;
+  background: #18181d;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.icon-bubble-purple {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-}
-
+.icon-bubble-purple,
 .icon-bubble-cyan {
-  background: rgba(6, 182, 212, 0.15);
-  color: #22d3ee;
+  background: #18181d;
+  color: var(--text-primary);
 }
 
 /* Main Layout */
@@ -277,7 +242,7 @@ body {
 textarea#source-text {
   width: 100%;
   min-height: 140px;
-  background: rgba(10, 14, 23, 0.65);
+  background: #0d0d10;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   padding: 1rem 1.25rem;
@@ -287,6 +252,11 @@ textarea#source-text {
   line-height: 1.6;
   resize: vertical;
   outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+textarea#source-text:focus {
+  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .input-toolbar {
@@ -306,8 +276,8 @@ textarea#source-text {
 .stat-pill {
   font-size: 0.775rem;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #18181d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 0.25rem 0.6rem;
   border-radius: var(--radius-full);
 }
@@ -330,18 +300,31 @@ textarea#source-text {
   border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .btn-ghost {
-  background: rgba(255, 255, 255, 0.04);
+  background: #18181d;
   color: var(--text-secondary);
   border: 1px solid var(--bg-card-border);
 }
 
+.btn-ghost:hover {
+  background: #22222a;
+  color: var(--text-primary);
+}
+
 .btn-primary {
-  background: var(--grad-brand);
-  color: #ffffff;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+  background: #f4f4f6;
+  color: #09090b;
+  border: 1px solid #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
 }
 
 /* Tone Selector Section */
@@ -379,15 +362,17 @@ textarea#source-text {
 }
 
 .tone-pill.active {
-  background: rgba(30, 41, 67, 0.85);
-  border-color: var(--accent-primary);
+  background: #18181f;
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
 .tone-pill .pill-icon {
   width: 38px;
   height: 38px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.05);
+  background: #18181d;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
   display: flex;
   align-items: center;
@@ -395,7 +380,8 @@ textarea#source-text {
 }
 
 .tone-pill.active .pill-icon {
-  background: var(--grad-brand);
+  background: #272730;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 
@@ -471,8 +457,9 @@ textarea#source-text {
   font-weight: 700;
   padding: 0.2rem 0.45rem;
   border-radius: var(--radius-sm);
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  background: #1a1a20;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
   flex-shrink: 0;
 }
 
@@ -607,11 +594,11 @@ textarea#source-text {
 }
 
 .toast {
-  background: rgba(18, 24, 38, 0.95);
+  background: rgba(20, 20, 24, 0.96);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-  color: #fff;
+  color: var(--text-primary);
   padding: 0.65rem 1.15rem;
   border-radius: var(--radius-sm);
   font-size: 0.825rem;
